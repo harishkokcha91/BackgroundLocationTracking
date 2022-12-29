@@ -36,8 +36,12 @@
 
         <service
             android:name=".LocationUpdatesServiceForeground"
-            android:foregroundServiceType="location"
-            android:exported="false" />
+            android:foregroundServiceType="location" />
+        <service
+            android:enabled="true"
+            android:exported="true"
+            android:name=".LocationEndlessService"
+            android:foregroundServiceType="location" />
     </application>
 
 </manifest>

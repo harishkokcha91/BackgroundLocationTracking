@@ -1,13 +1,34 @@
 package com.plcoding.backgroundlocationtracking;
 
+import static com.plcoding.backgroundlocationtracking.SeriveStateKt.getServiceState;
+
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
 public class AppUtils {
     public static final String TAG = AppUtils.class.getSimpleName();
+
+
+    public static void actionOnLocationService(Context applicationContext, Actions action) {
+        Log.d("Harish","Starting getServiceState(this) : " + getServiceState(applicationContext) + " action.name() : " + action.name());
+        if (getServiceState(applicationContext) == ServiceState.STOPPED && action == Actions.STOP) {
+            return;
+        }
+        Intent intent = new Intent(applicationContext, LocationEndlessService.class);
+        intent.setAction(action.name());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Log.d("Harish","Starting the service in >=26 Mode");
+            applicationContext.startForegroundService(intent);
+            return;
+        }
+        Log.d("Harish","Starting the service in < 26 Mode");
+        applicationContext.startService(intent);
+    }
+
     public static void stopRunningLocationService(Context applicationContext) {
         Log.e(TAG, "stopRunningLocationService()");
         if (applicationContext == null) {
@@ -39,16 +60,51 @@ public class AppUtils {
             }
         }
     }
+
     public static boolean isMyServiceRunning(Context context, Class<?> serviceClass) {
-        Log.d("Harish","isMyServiceRunning ");
+        Log.d("Harish", "isMyServiceRunning ");
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (serviceClass.getName().equalsIgnoreCase(service.service.getClassName())) {
-                Log.d("Harish","isMyServiceRunning true");
+                Log.d("Harish", "isMyServiceRunning true");
                 return true;
             }
         }
-        Log.d("Harish","isMyServiceRunning false");
+        Log.d("Harish", "isMyServiceRunning false");
         return false;
+    }
+
+    public static boolean hasPermission(Context context, String permission) {
+
+        int res = context.checkCallingOrSelfPermission(permission);
+
+        Log.v(TAG, "permission: " + permission.toString() + " = \t\t" +
+                (res == PackageManager.PERMISSION_GRANTED ? "GRANTED" : "DENIED"));
+
+        return res == PackageManager.PERMISSION_GRANTED;
+
+    }
+
+    /**
+     * Determines if the context calling has the required permissions
+     *
+     * @param context     - the IPC context
+     * @param permissions - The permissions to check
+     * @return true if the IPC has the granted permission
+     */
+    public static boolean hasPermissions(Context context, String[] permissions) {
+        Log.d("Harish", "permissions " + permissions);
+        boolean hasAllPermissions = true;
+
+//        for (String permission : permissions) {
+        for(String permission : permissions) {
+            //you can return false instead of assigning, but by assigning you can log all permission values
+            if (!hasPermission(context, permission)) {
+                hasAllPermissions = false;
+            }
+        }
+
+        return hasAllPermissions;
+
     }
 }

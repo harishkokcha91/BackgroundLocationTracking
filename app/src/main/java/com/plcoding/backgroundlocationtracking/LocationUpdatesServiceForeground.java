@@ -27,10 +27,8 @@ import com.google.android.gms.location.Priority;
 
 public class LocationUpdatesServiceForeground extends Service {
 
-    public static final String PERMISSION_BROADCAST_INTENT =
-            "com.google.android.gms.location.sample.permission_brodcastintent";
-    private static final String PACKAGE_NAME =
-            "com.google.android.gms.location.sample.locationupdatesforegroundservice";
+    public static final String PERMISSION_BROADCAST_INTENT = "com.google.android.gms.location.sample.permission_brodcastintent";
+    private static final String PACKAGE_NAME = "com.google.android.gms.location.sample.locationupdatesforegroundservice";
     static final String ACTION_BROADCAST = PACKAGE_NAME + ".broadcast";
     static final String EXTRA_LOCATION = PACKAGE_NAME + ".location";
     private static final String TAG = LocationUpdatesServiceForeground.class.getSimpleName();
@@ -38,8 +36,7 @@ public class LocationUpdatesServiceForeground extends Service {
      * The name of the channel for notifications.
      */
     private static final String CHANNEL_ID = "channel_01";
-    private static final String EXTRA_STARTED_FROM_NOTIFICATION = PACKAGE_NAME +
-            ".started_from_notification";
+    private static final String EXTRA_STARTED_FROM_NOTIFICATION = PACKAGE_NAME + ".started_from_notification";
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
@@ -48,8 +45,7 @@ public class LocationUpdatesServiceForeground extends Service {
      * The fastest rate for active location updates. Updates will never be more frequent
      * than this value.
      */
-    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
-            UPDATE_INTERVAL_IN_MILLISECONDS / 2;
+    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2;
     /**
      * The identifier for the notification displayed for the foreground service.
      */
@@ -89,7 +85,7 @@ public class LocationUpdatesServiceForeground extends Service {
 
     @Override
     public void onCreate() {
-        Log.d(TAG,"LocationUpdatesServiceNew onCreate");
+        Log.d(TAG, "LocationUpdatesServiceNew onCreate");
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         mLocationCallback = new LocationCallback() {
@@ -101,7 +97,7 @@ public class LocationUpdatesServiceForeground extends Service {
         };
 
         createLocationRequest();
-        //getLastLocation();
+        getLastLocation();
 
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
@@ -109,8 +105,7 @@ public class LocationUpdatesServiceForeground extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.app_name);
             // Create the channel for the notification
-            NotificationChannel mChannel =
-                    new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
 
             // Set the Notification Channel for the Notification Manager.
             mNotificationManager.createNotificationChannel(mChannel);
@@ -122,14 +117,13 @@ public class LocationUpdatesServiceForeground extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "Service started");
-        boolean startedFromNotification = intent != null && intent.getBooleanExtra("EXTRA_STARTED_FROM_NOTIFICATION",
-                false);
+        boolean startedFromNotification = intent != null && intent.getBooleanExtra("EXTRA_STARTED_FROM_NOTIFICATION", false);
 
-        // We got here because the user decided to remove location updates from the notification.
-        if (startedFromNotification) {
-            removeLocationUpdates();
-            stopSelf();
-        }
+//        // We got here because the user decided to remove location updates from the notification.
+//        if (startedFromNotification) {
+//            removeLocationUpdates();
+//            stopSelf();
+//        }
         // Tells the system to not try to recreate the service after it has been killed.
         return START_STICKY;
     }
@@ -195,8 +189,7 @@ public class LocationUpdatesServiceForeground extends Service {
      */
     public void requestLocationUpdates() {
         Log.i(TAG, "Requesting location updates requestLocationUpdates()");
-        if (!PermissionUtils.checkHasLocationPermissions(this)
-                || !Utils.isLocationServiceEnable(this)) {
+        if (!PermissionUtils.checkHasLocationPermissions(this) || !Utils.isLocationServiceEnable(this)) {
             Log.e(TAG, "requestLocationUpdates PermissionTransparentActivity");
             startActivity(new Intent(this, PermissionTransparentActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             return;
@@ -204,12 +197,11 @@ public class LocationUpdatesServiceForeground extends Service {
 
         Log.i(TAG, "Requesting location updates");
         Utils.setRequestingLocationUpdates(this, true);
-//        startService(new Intent(getApplicationContext(), LocationUpdatesServiceNew.class));
+//      startService(new Intent(getApplicationContext(), LocationUpdatesServiceNew.class));
         startForeground(NOTIFICATION_ID, getNotification());
 
         try {
-            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                    mLocationCallback, Looper.myLooper());
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
         } catch (SecurityException unlikely) {
             Utils.setRequestingLocationUpdates(this, false);
             Log.e(TAG, "Lost location permission. Could not request updates. " + unlikely);
@@ -239,7 +231,7 @@ public class LocationUpdatesServiceForeground extends Service {
         Intent intent = new Intent(this, LocationUpdatesServiceForeground.class);
 
         CharSequence text = Utils.getLocationText(mLocation);
-        Log.d("Harish","new location "+text.toString());
+        Log.d("Harish", "new location " + text.toString());
         // Extra to help us figure out if we arrived in onStartCommand via the notification or not.
         intent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true);
 
@@ -247,20 +239,9 @@ public class LocationUpdatesServiceForeground extends Service {
         builder = new NotificationCompat.Builder(this, CHANNEL_ID);
 
         // The PendingIntent to launch activity.
-        PendingIntent activityPendingIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, MainActivity.class),
-                android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S ?
-                        PendingIntent.FLAG_MUTABLE:PendingIntent.FLAG_ONE_SHOT);
+        PendingIntent activityPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S ? PendingIntent.FLAG_MUTABLE : PendingIntent.FLAG_ONE_SHOT);
 
-        builder.setContentText(text)
-                .setContentTitle(Utils.getLocationTitle(this))
-                .setOngoing(true)
-                .setPriority(Notification.PRIORITY_HIGH)
-                .setSmallIcon(R.drawable.ic_launcher_background)
-                .setTicker(text)
-                .addAction(0, "MainActivity",
-                        activityPendingIntent)
-                .setWhen(System.currentTimeMillis());
+        builder.setContentText(text).setContentTitle(Utils.getLocationTitle(this)).setOngoing(true).setPriority(Notification.PRIORITY_HIGH).setSmallIcon(R.drawable.ic_launcher_background).setTicker(text).addAction(0, "MainActivity", activityPendingIntent).setWhen(System.currentTimeMillis());
 
 
         return builder.build();
@@ -268,14 +249,13 @@ public class LocationUpdatesServiceForeground extends Service {
 
     private void getLastLocation() {
         try {
-            mFusedLocationClient.getLastLocation()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful() && task.getResult() != null) {
-                            mLocation = task.getResult();
-                        } else {
-                            Log.w(TAG, "Failed to get location.");
-                        }
-                    });
+            mFusedLocationClient.getLastLocation().addOnCompleteListener(task -> {
+                if (task.isSuccessful() && task.getResult() != null) {
+                    mLocation = task.getResult();
+                } else {
+                    Log.w(TAG, "Failed to get location.");
+                }
+            });
         } catch (SecurityException unlikely) {
             Log.e(TAG, "Lost location permission." + unlikely);
         }
@@ -290,7 +270,7 @@ public class LocationUpdatesServiceForeground extends Service {
         if (LocationServiceUtils.isBetterLocation(location, mLocation)) {
             mLocation = location;
             mNotificationManager.notify(NOTIFICATION_ID, getNotification());
-            AppUtils.startLocationService(this);
+//            AppUtils.startLocationService(this);
         }
     }
 
@@ -298,7 +278,7 @@ public class LocationUpdatesServiceForeground extends Service {
      * Sets the location request parameters.
      */
     private void createLocationRequest() {
-        Log.d(TAG,"LocationUpdatesServiceNew createLocationRequest");
+        Log.d(TAG, "LocationUpdatesServiceNew createLocationRequest");
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
         mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
@@ -312,8 +292,7 @@ public class LocationUpdatesServiceForeground extends Service {
      * @param context The {@link Context}.
      */
     public boolean serviceIsRunningInForeground(Context context) {
-        ActivityManager manager = (ActivityManager) context.getSystemService(
-                Context.ACTIVITY_SERVICE);
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         if (manager != null) {
             for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
                 if (getClass().getName().equals(service.service.getClassName())) {
